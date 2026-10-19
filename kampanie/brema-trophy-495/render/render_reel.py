@@ -3,6 +3,7 @@
 
 v1  obrotowa łódź (kolejność i czasy klatek z oryginalnego GIF-a) + duży animowany tytuł
 v2  scenariusz A (../scenariusz-reel.md) na pojedynczych zdjęciach
+v3  to samo co v2, ale łódź na wodzie w fiordzie o świcie (tło ../tla/)
 
 Użycie:
   python3 render_reel.py v1 --assets ../zdjecia --out v1.mp4
@@ -14,7 +15,7 @@ import os
 import subprocess
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageSequence
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps, ImageSequence
 
 W, H, FPS, DUR = 1080, 1920, 30, 10.0
 NFRAMES = int(DUR * FPS)
@@ -141,6 +142,16 @@ def outline_mask(text, fnt, stroke):
     return Image.fromarray(ring.astype(np.uint8)), (ox, oy)
 
 
+def add_shadow(im, radius=14, opacity=0.55):
+    """Miękki cień pod warstwą tekstu (warstwa musi mieć margines na rozmycie)."""
+    a = np.asarray(im)[..., 3]
+    sh = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    sh.putalpha(Image.fromarray((np.asarray(Image.fromarray(a).filter(ImageFilter.GaussianBlur(radius)), np.float32)
+                                 * opacity).astype(np.uint8)))
+    sh.alpha_composite(im)
+    return sh
+
+
 def colored(mask, rgb):
     im = Image.new('RGBA', mask.size, rgb + (255,))
     im.putalpha(mask)
@@ -150,8 +161,9 @@ def colored(mask, rgb):
 class Title:
     """BREMA (biały, czerwony pasek pod spodem) / TROPHY (kontur) 495 (czerwony), jak grafika na burcie."""
 
-    def __init__(self, block_w=880, top=300):
+    def __init__(self, block_w=880, top=300, shadow=False):
         self.margin = 80
+        self.shadow = shadow
         trk = 0.035
 
         def brema(size):
@@ -247,6 +259,8 @@ class Title:
             s *= 1 + 0.05 * (1 - prog(t, hit, hit + 0.4)) ** 2
         if t_out is not None:
             op *= 1 - prog(t, t_out, t_out + 0.17)
+        if self.shadow:
+            c = add_shadow(c)
         if abs(s - 1) > 1e-4:
             c = resized(c, self.cw * s, self.ch * s)
         paste(frame, with_opacity(c, op), self.cx - c.width / 2, self.top + self.ch / 2 - c.height / 2)
@@ -255,7 +269,7 @@ class Title:
 class Words:
     """Linie tekstu wyjeżdżające spod własnej linii bazowej, jedna po drugiej."""
 
-    def __init__(self, lines, starts, t_out, size=112, center_y=485):
+    def __init__(self, lines, starts, t_out, size=112, center_y=485, shadow=False):
         f = font('InterDisplay-Bold.otf', size)
         lh = size * 1.12
         top_base = center_y - lh * (len(lines) - 1) / 2 + size * 0.36
@@ -263,7 +277,11 @@ class Words:
         for i, (text, st) in enumerate(zip(lines, starts)):
             m, (ox, oy) = ink_mask(text, f)
             base = top_base + i * lh
-            self.items.append((colored(m, WHITE), W / 2 - m.width / 2, base + oy, base + 0.26 * size, st))
+            im, pad = colored(m, WHITE), 0
+            if shadow:
+                pad = 30
+                im = add_shadow(ImageOps.expand(im, pad))
+            self.items.append((im, W / 2 - im.width / 2, base + oy - pad, base + 0.26 * size + pad * 0.5, st))
         self.cap = size * 0.73
         self.t_out = t_out
 
@@ -462,11 +480,151 @@ def render_v2(assets, emit):
         emit(fr, t)
 
 
+# ---------------------------------------------------------------- v3: scenariusz A na tle fiordu
+
+# linia wody (ułamek wysokości wycinka łodzi) i kadr tła dla każdego ujęcia v2:
+# zoom tła start/koniec, przesunięcie x, lustro (ujęcie od rufy = patrzymy w drugą stronę fiordu)
+V3_SHOTS = {
+    'obrot-09.png': dict(water=0.78, bg=((1.00, 1.04), 0, False)),
+    'obrot-00.png': dict(water=0.78, bg=((1.07, 1.10), 40, False)),
+    'obrot-05.png': dict(water=0.86, bg=((1.07, 1.10), -40, True)),
+    'obrot-02.png': dict(water=0.80, bg=((1.03, 1.06), 20, False)),
+    'obrot-01.png': dict(water=0.74, bg=((1.06, 1.00), 0, False)),
+}
+HORIZON_PAD = 1.12  # zapas na zoom i przesunięcia tła
+
+
+def prepare_plate(path):
+    """Tło: cover-fit z zapasem, lekkie rozmycie (głębia ostrości), przyciemniona góra pod napisy."""
+    im = Image.open(path).convert('RGB')
+    sc = max(W / im.width, H / im.height) * HORIZON_PAD
+    im = im.resize((round(im.width * sc), round(im.height * sc)), Image.LANCZOS).filter(ImageFilter.GaussianBlur(2.2))
+    arr = np.asarray(im).astype(np.float32)
+    y = np.linspace(0, 1, arr.shape[0])[:, None, None]
+    arr *= np.interp(y, [0, 0.42, 0.62, 1], [0.55, 0.78, 1.0, 0.85])
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+
+
+def plate_view(plate, zoom, dx, mirror, light):
+    src = plate.transpose(Image.FLIP_LEFT_RIGHT) if mirror else plate
+    w, h = W * HORIZON_PAD / zoom, H * HORIZON_PAD / zoom
+    cx = min(max(src.width / 2 + dx, w / 2), src.width - w / 2)
+    cy = min(max(src.height / 2, h / 2), src.height - h / 2)
+    box = (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
+    view = src.resize((W, H), Image.BILINEAR, box=box)
+    if light < 0.999:
+        view = Image.fromarray((np.asarray(view).astype(np.float32) * light).astype(np.uint8))
+    return view.convert('RGBA')
+
+
+def make_mist(seed=3):
+    rng = np.random.default_rng(seed)
+    small = rng.random((10, 40)).astype(np.float32)
+    big = np.asarray(Image.fromarray((small * 255).astype(np.uint8)).resize((1600, 260), Image.BICUBIC), np.float32) / 255
+    prof = np.exp(-((np.linspace(-1, 1, 260)) / 0.45) ** 2)[:, None]
+    a = np.clip((big - 0.25) * 1.4, 0, 1) * prof * 0.32
+    out = np.zeros((260, 1600, 4), np.uint8)
+    out[..., :3] = (214, 222, 232)
+    out[..., 3] = (a * 255).astype(np.uint8)
+    return Image.fromarray(out).filter(ImageFilter.GaussianBlur(6))
+
+
+def on_water(im, wl, t):
+    """Łódź na wodzie: część pod linią wody znika, nad linią zostaje; odbicie z falowaniem i linia piany."""
+    arr = np.array(im)
+    h, w = arr.shape[:2]
+    rows = np.arange(h, dtype=np.float32)
+    cut = np.clip((wl - rows) / 5.0, 0, 1)
+    vis = arr.copy()
+    vis[..., 3] = (vis[..., 3].astype(np.float32) * cut[:, None]).astype(np.uint8)
+    # odbicie: widoczna część odwrócona względem linii wody
+    top = arr[:max(1, int(wl))][::-1].astype(np.float32)
+    n = min(len(top), int(h * 0.75))
+    top = top[:n]
+    r = np.arange(n, dtype=np.float32)
+    shift = (np.sin(r / 7.0 + t * 5.0) * (0.8 + r * 0.035)).astype(int)
+    for i in range(n):
+        top[i] = np.roll(top[i], shift[i], axis=0)
+    top[..., :3] = top[..., :3] * 0.42 + np.array([18, 26, 36], np.float32) * 0.58
+    top[..., 3] *= 0.45 * (1 - r / n)[:, None] ** 1.6
+    refl = Image.fromarray(np.clip(top, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))
+    # linia piany tam, gdzie kadłub dotyka wody
+    row = arr[max(0, int(wl) - 3), :, 3].astype(np.float32) / 255
+    foam = np.zeros((14, w, 4), np.uint8)
+    foam[..., :3] = 235
+    foam[..., 3] = (row[None, :] * 255 * 0.22 * np.exp(-((np.arange(14) - 7) / 2.5) ** 2)[:, None]).astype(np.uint8)
+    foam = Image.fromarray(foam).filter(ImageFilter.GaussianBlur(2))
+    return Image.fromarray(vis), refl, foam
+
+
+def grade_boat(im, tint=(105, 100, 118), amount=0.16):
+    """Lekkie dopasowanie kolorów łodzi ze studia do światła świtu."""
+    arr = np.asarray(im).astype(np.float32)
+    arr[..., :3] = arr[..., :3] * (1 - amount) + np.array(tint, np.float32) * amount * (arr[..., :3] / 255 + 0.3)
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+
+
+def render_v3(assets, emit, bg_path):
+    cuts = {sh['file']: load_cutout(os.path.join(assets, sh['file'])) for sh in SHOTS_V2}
+    plate = prepare_plate(bg_path)
+    mist = make_mist()
+    title = Title(block_w=880, top=300, shadow=True)
+    words = [Words(['Poranek.', 'Jezioro.', 'Ty.'], [CUTS[0] + k * BEAT / 2 for k in range(3)], CUTS[2] - 0.17,
+                   shadow=True),
+             Words(['Na kolejny', 'sezon.'], [CUTS[2] + k * BEAT / 2 for k in range(2)], 8.5 - 0.17, shadow=True)]
+
+    first = SHOTS_V2[0]
+    sc, ox, oy = shot_geometry(first, cuts[first['file']], 0.8)
+    (ax, ay), (bx, by), thick = stripe_line(cuts[first['file']])
+    pa, pb = (ox + ax * sc, oy + ay * sc), (ox + bx * sc, oy + by * sc)
+    mid = ((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)
+
+    for n in (sorted(ONLY) if ONLY else range(NFRAMES)):
+        t = n / FPS
+        shot = next(sh for sh in SHOTS_V2 if sh['t0'] <= t < sh['t1'])
+        extra = V3_SHOTS[shot['file']]
+        cut = cuts[shot['file']]
+        (z0, z1), dx, mirror = extra['bg']
+        a, z = (max(shot['t0'], 0.8), shot['t1'])
+        light = 0.12 + 0.88 * ease_in_out(prog(t, 0.7, 1.9))
+        fr = plate_view(plate, z0 + (z1 - z0) * prog(t, a, z), dx, mirror, light)
+
+        sc, x, y = shot_geometry(shot, cut, t)
+        e = ease_in_out(prog(t, *shot['reveal'])) if 'reveal' in shot else 1.0
+        if e > 0:
+            im = grade_boat(resized(cut, cut.width * sc, cut.height * sc))
+            if e < 1:
+                im = with_opacity(exposure(im, e ** 1.3), min(1.0, e * 1.6))
+            for sa, sb, st in shot.get('sweeps', []):
+                if sa <= t <= sb:
+                    im = sweep(im, ease_in_out(prog(t, sa, sb)), st)
+            bob = 3.0 * np.sin(2 * np.pi * t / 3.1)
+            water_y = y + extra['water'] * im.height
+            vis, refl, foam = on_water(im, water_y - (y + bob), t)
+            paste(fr, refl, x, water_y)
+            paste(fr, vis, x, y + bob)
+            paste(fr, with_opacity(foam, e), x, water_y - 7)
+            paste(fr, with_opacity(mist, 0.55 * light), -260 + 18 * t, water_y - 150)
+        if t < 1.5:
+            g = ease_in_out(prog(t, 0.05, 0.7))
+            if g > 0:
+                p0 = (mid[0] + (pa[0] - mid[0]) * g, mid[1] + (pa[1] - mid[1]) * g)
+                p1 = (mid[0] + (pb[0] - mid[0]) * g, mid[1] + (pb[1] - mid[1]) * g)
+                layer, lx, ly = draw_line_layer(p0, p1, thick * sc)
+                paste(fr, with_opacity(layer, 1 - prog(t, 0.8, 1.5)), lx, ly)
+        title.render(fr, t, 'build', t0=1.15, t_out=CUTS[0] - 0.17)
+        for wd in words:
+            wd.render(fr, t)
+        title.render(fr, t, 'punch', t0=8.5, hit=8.5)
+        emit(fr, t)
+
+
 # ---------------------------------------------------------------- wyjście
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('version', choices=['v1', 'v2'])
+    ap.add_argument('version', choices=['v1', 'v2', 'v3'])
+    ap.add_argument('--bg', default='../tla/fiord-swit.jpg', help='tło krajobrazu dla v3')
     ap.add_argument('--assets', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--stills', default='')
@@ -495,7 +653,10 @@ def main():
                 Image.fromarray(rgb).save(os.path.join(args.stills_dir, f'{args.version}_{s:05.2f}s.jpg'), quality=90)
         state['n'] += 1
 
-    (render_v1 if args.version == 'v1' else render_v2)(args.assets, emit)
+    if args.version == 'v3':
+        render_v3(args.assets, emit, args.bg)
+    else:
+        (render_v1 if args.version == 'v1' else render_v2)(args.assets, emit)
     if ff:
         ff.stdin.close()
         ff.wait()

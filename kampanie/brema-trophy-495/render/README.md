@@ -6,14 +6,17 @@ Dwie wersje, 1080×1920, 30 fps, 10 s, napisy w górnej strefie (y 300–700 px,
 |---|---|
 | `../wideo/brema-trophy-495_v1_obrot.mp4` | Obrotowa łódź z 10 zdjęć HQ, kolejność i czasy klatek 1:1 z oryginalnego GIF-a (pełny obrót 4 s). Duży tytuł BREMA / TROPHY 495 buduje się w 0,5–2,1 s. Na 8,5 s obrót staje na ujęciu 3/4 z przodu: przejazd światła i puls tytułu. |
 | `../wideo/brema-trophy-495_v2_zdjecia.mp4` | Scenariusz A na pojedynczych zdjęciach. Czerwona linia trafia w pasek na burcie, łódź wyłania się z ciemności. Potem przód, rufa, bok, 3/4 z cięciami w rytm podkładu, copy w wariancie „miękkim”, a od 8,5 s tytuł. |
+| `../wideo/brema-trophy-495_v3_fiord.mp4` | To samo co v2, ale łódź stoi na wodzie w norweskim fiordzie o świcie. Część kadłuba pod linią wody jest schowana, łódź ma falujące odbicie, piana przy burcie, mgła i lekkie kołysanie. Scena rozjaśnia się razem z wyłonieniem łodzi. W ujęciu od rufy tło jest w lustrzanym odbiciu (widok w drugą stronę fiordu). Podkład jak w v2. |
 
 Zdjęcia `../zdjecia/obrot-00…09.png` są ponumerowane w kolejności klatek GIF-a `oryginal-obrot.gif`.
+Tło v3 `../tla/fiord-swit.jpg` (768×1376) wygenerował ElevenLabs (Nano Banana 2 Lite). Prompt jest w historii flow na koncie ElevenLabs. Linie wody i kadry tła per ujęcie są w `V3_SHOTS`.
 
 ## Odtworzenie
 
 ```
 python3 render_reel.py v1 --assets ../zdjecia --out v1_video.mp4
 python3 render_reel.py v2 --assets ../zdjecia --out v2_video.mp4
+python3 render_reel.py v3 --assets ../zdjecia --out v3_video.mp4   # tło: --bg ../tla/fiord-swit.jpg
 python3 music.py v1 --out v1.wav
 python3 music.py v2 --out v2.wav
 # normalizacja do -14 LUFS (loudnorm, 2 przebiegi) i złożenie:
@@ -27,4 +30,5 @@ Klatki kontrolne bez renderu całości: `--stills 1.0,2.6,8.8 --stills-dir ./kla
 - **Podkład jest zastępczy**: synteza w numpy, bez `gm music`, bo sesja w chmurze nie ma dostępu do komputera. Uderzenia są zsynchronizowane z obrazem (v1: 2,0 s i 8,5 s; v2: 0,8 s, cięcia i 8,5 s). Docelowo warto podmienić na `gm music --end hit`, tak żeby hit wypadał na 8,5 s.
 - **Font**: Inter Display Black, bo Google Fonts są zablokowane w tym środowisku. Do podmiany na font z folderu GraphicMill Motion.
 - **Copy v2** to wariant „miękki” ze scenariusza. Teksty i czasy są w `render_v2()` (klasa `Words`).
+- **Tło v3 ma tylko 768×1376.** Jest rozmyte (głębia ostrości), więc to nie razi, ale wersja 2K wymaga dokupienia kredytów ElevenLabs.
 - **Brak CTA.** Slot jest wolny pod tytułem w ostatnich 1,5 s.
