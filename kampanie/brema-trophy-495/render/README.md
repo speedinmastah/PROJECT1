@@ -1,6 +1,6 @@
 # Render rolek Brema Trophy 495
 
-Dwie wersje, 1080×1920, 30 fps, 10 s, napisy w górnej strefie (y 300–700 px, poza UI Reels):
+Trzy wersje, 1080×1920, 30 fps, 10 s, napisy w górnej strefie (y 300–700 px, poza UI Reels):
 
 | Plik | Co jest w środku |
 |---|---|
