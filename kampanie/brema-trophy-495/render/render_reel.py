@@ -3,7 +3,7 @@
 
 v1  obrotowa łódź (kolejność i czasy klatek z oryginalnego GIF-a) + duży animowany tytuł
 v2  scenariusz A (../scenariusz-reel.md) na pojedynczych zdjęciach
-v3  to samo co v2, ale łódź na wodzie, tło to klip wideo z górskim jeziorem (../tla/)
+v3  to samo co v2, ale za łodzią ruchome tło: klip wideo z górskim jeziorem (../tla/)
 
 Użycie:
   python3 render_reel.py v1 --assets ../zdjecia --out v1.mp4
@@ -480,16 +480,16 @@ def render_v2(assets, emit):
         emit(fr, t)
 
 
-# ---------------------------------------------------------------- v3: scenariusz A na tle fiordu
+# ---------------------------------------------------------------- v3: scenariusz A na tle krajobrazu
 
-# linia wody (ułamek wysokości wycinka łodzi) i kadr tła dla każdego ujęcia v2:
-# zoom tła start/koniec, przesunięcie x, lustro (ujęcie od rufy = patrzymy w drugą stronę fiordu)
+# kadr tła dla każdego ujęcia v2: zoom start/koniec, przesunięcie x, lustro (ujęcie od rufy = widok w drugą stronę),
+# fragment klipu (start w s, środek kadru 9:16 w px klipu 1920x1080)
 V3_SHOTS = {
-    'obrot-09.png': dict(water=0.78, bg=((1.00, 1.04), 0, False), clip=(12.0, 1150)),
-    'obrot-00.png': dict(water=0.78, bg=((1.07, 1.10), 40, False), clip=(4.0, 960)),
-    'obrot-05.png': dict(water=0.86, bg=((1.07, 1.10), -40, True), clip=(8.0, 900)),
-    'obrot-02.png': dict(water=0.80, bg=((1.03, 1.06), 20, False), clip=(16.0, 1200)),
-    'obrot-01.png': dict(water=0.74, bg=((1.06, 1.00), 0, False), clip=(0.3, 1000)),
+    'obrot-09.png': dict(bg=((1.00, 1.04), 0, False), clip=(12.0, 1150)),
+    'obrot-00.png': dict(bg=((1.07, 1.10), 40, False), clip=(4.0, 960)),
+    'obrot-05.png': dict(bg=((1.07, 1.10), -40, True), clip=(8.0, 900)),
+    'obrot-02.png': dict(bg=((1.03, 1.06), 20, False), clip=(16.0, 1200)),
+    'obrot-01.png': dict(bg=((1.06, 1.00), 0, False), clip=(0.3, 1000)),
 }
 CLIP_SPEED = 0.8  # klip 24 kl/s odtwarzany w 0,8x daje dokładnie 30 kl/s bez dublowania klatek
 HORIZON_PAD = 1.12  # zapas na zoom i przesunięcia tła
@@ -567,53 +567,6 @@ def grade_video_frame(rgb, zoom, light):
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert('RGBA')
 
 
-def make_mist(seed=3):
-    rng = np.random.default_rng(seed)
-    small = rng.random((10, 40)).astype(np.float32)
-    big = np.asarray(Image.fromarray((small * 255).astype(np.uint8)).resize((1600, 260), Image.BICUBIC), np.float32) / 255
-    prof = np.exp(-((np.linspace(-1, 1, 260)) / 0.45) ** 2)[:, None]
-    a = np.clip((big - 0.25) * 1.4, 0, 1) * prof * 0.32
-    out = np.zeros((260, 1600, 4), np.uint8)
-    out[..., :3] = (214, 222, 232)
-    out[..., 3] = (a * 255).astype(np.uint8)
-    return Image.fromarray(out).filter(ImageFilter.GaussianBlur(6))
-
-
-def on_water(im, wl, t):
-    """Łódź na wodzie: część pod linią wody znika, nad linią zostaje; odbicie z falowaniem i linia piany."""
-    arr = np.array(im)
-    h, w = arr.shape[:2]
-    rows = np.arange(h, dtype=np.float32)
-    cut = np.clip((wl - rows) / 5.0, 0, 1)
-    vis = arr.copy()
-    vis[..., 3] = (vis[..., 3].astype(np.float32) * cut[:, None]).astype(np.uint8)
-    # odbicie: widoczna część odwrócona względem linii wody
-    top = arr[:max(1, int(wl))][::-1].astype(np.float32)
-    n = min(len(top), int(h * 0.75))
-    top = top[:n]
-    r = np.arange(n, dtype=np.float32)
-    shift = (np.sin(r / 7.0 + t * 5.0) * (0.8 + r * 0.035)).astype(int)
-    for i in range(n):
-        top[i] = np.roll(top[i], shift[i], axis=0)
-    top[..., :3] = top[..., :3] * 0.42 + np.array([18, 26, 36], np.float32) * 0.58
-    top[..., 3] *= 0.45 * (1 - r / n)[:, None] ** 1.6
-    refl = Image.fromarray(np.clip(top, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))
-    # linia piany tam, gdzie kadłub dotyka wody
-    row = arr[max(0, int(wl) - 3), :, 3].astype(np.float32) / 255
-    foam = np.zeros((14, w, 4), np.uint8)
-    foam[..., :3] = 235
-    foam[..., 3] = (row[None, :] * 255 * 0.22 * np.exp(-((np.arange(14) - 7) / 2.5) ** 2)[:, None]).astype(np.uint8)
-    foam = Image.fromarray(foam).filter(ImageFilter.GaussianBlur(2))
-    return Image.fromarray(vis), refl, foam
-
-
-def grade_boat(im, tint=(105, 100, 118), amount=0.16):
-    """Lekkie dopasowanie kolorów łodzi ze studia do światła świtu."""
-    arr = np.asarray(im).astype(np.float32)
-    arr[..., :3] = arr[..., :3] * (1 - amount) + np.array(tint, np.float32) * amount * (arr[..., :3] / 255 + 0.3)
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
-
-
 def render_v3(assets, emit, bg_path, work_dir):
     cuts = {sh['file']: load_cutout(os.path.join(assets, sh['file'])) for sh in SHOTS_V2}
     video_bg = bg_path.lower().endswith(('.mp4', '.mov'))
@@ -623,7 +576,6 @@ def render_v3(assets, emit, bg_path, work_dir):
         reader = FrameReader(bg_file)
     else:
         plate = prepare_plate(bg_path)
-    mist = make_mist()
     title = Title(block_w=880, top=300, shadow=True)
     words = [Words(['Brema.', 'Jezioro.', 'Ty.'], [CUTS[0] + k * BEAT / 2 for k in range(3)], CUTS[2] - 0.17,
                    shadow=True),
@@ -652,19 +604,13 @@ def render_v3(assets, emit, bg_path, work_dir):
         sc, x, y = shot_geometry(shot, cut, t)
         e = ease_in_out(prog(t, *shot['reveal'])) if 'reveal' in shot else 1.0
         if e > 0:
-            im = grade_boat(resized(cut, cut.width * sc, cut.height * sc))
+            im = resized(cut, cut.width * sc, cut.height * sc)
             if e < 1:
                 im = with_opacity(exposure(im, e ** 1.3), min(1.0, e * 1.6))
             for sa, sb, st in shot.get('sweeps', []):
                 if sa <= t <= sb:
                     im = sweep(im, ease_in_out(prog(t, sa, sb)), st)
-            bob = 3.0 * np.sin(2 * np.pi * t / 3.1)
-            water_y = y + extra['water'] * im.height
-            vis, refl, foam = on_water(im, water_y - (y + bob), t)
-            paste(fr, refl, x, water_y)
-            paste(fr, vis, x, y + bob)
-            paste(fr, with_opacity(foam, e), x, water_y - 7)
-            paste(fr, with_opacity(mist, (0.3 if video_bg else 0.55) * light), -260 + 18 * t, water_y - 150)
+            paste(fr, im, x, y)
         if t < 1.5:
             g = ease_in_out(prog(t, 0.05, 0.7))
             if g > 0:
