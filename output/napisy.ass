@@ -1,0 +1,17 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Pestka,DejaVu Sans,74,&H00FFFFFF,&H00FFFFFF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,6,4,8,80,80,370,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.70,0:00:02.30,Pestka,,0,0,0,,{\fad(120,80)}Leżę w tym worku\Nod września.
+Dialogue: 0,0:00:02.35,0:00:03.85,Pestka,,0,0,0,,{\fad(120,80)}Kumple już dawno\Nw skupie...
+Dialogue: 0,0:00:03.90,0:00:05.25,Pestka,,0,0,0,,{\fad(120,80)}Gospodarzu,\Ndzwoń do Marcina,
+Dialogue: 0,0:00:05.30,0:00:06.60,Pestka,,0,0,0,,{\fad(120,80)}zanim zacznę\N{\c&H3CD2FF&}kiełkować!
