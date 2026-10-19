@@ -1,5 +1,7 @@
 # Skup Pestki — kampania Facebook / Instagram (Meta Ads)
 
+> **19.10.2026 — ten draft jest częściowo nieaktualny.** Kampanie zbudowane w koncie Meta i aktualne ustalenia są w [`../meta-2026-10/README.md`](../meta-2026-10/README.md). Najważniejsze zmiany: odbiór pestki z całej Polski (nie promień), 7 odmian na 2027 wg strony (nie 11), płatność przed załadunkiem, tylko Facebook bez Instagrama.
+
 **Status:** DRAFT do akceptacji Michała. Nic nie jest opublikowane ani wpięte w konto reklamowe.
 **Data:** 19.10.2026 (v2 — po feedbacku Michała)
 
