@@ -1,5 +1,7 @@
 """Generates Meta ad creatives for Skup Pestki Dyni from site photos.
-Usage: python3 -I make_creatives.py <img_dir> <frames_dir> <out_dir>
+Usage: python3 -I generuj_kreacje.py <img_dir> <frames_dir> <out_dir>
+  img_dir    — zdjęcia pobrane z pestkadyni.pl/wp-content/uploads/2026/09/ (+ logo.png)
+  frames_dir — kadr full_6.8.png wycięty z filmu (ffmpeg -ss 6.8)
 """
 import os
 import sys
