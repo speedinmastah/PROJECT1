@@ -90,3 +90,62 @@ Logo Skup Pestki Dyni + **Marcin: 796 866 639** + „Skup pestki dyni bezłuskow
 - [ ] Brak znaków wodnych (Gemini ✦ w rogu, „Veo”). Wykadruj albo zakryj planszą.
 - [ ] Pestki w kadrze są zielone i bez łupiny. AI lubi robić białe, w łupinie, a to jest dokładnie ten towar, którego nie skupujecie.
 - [ ] W tekście poprawnie: „KONTAKT” (w obecnym wideo jest „KOTNAKT”).
+
+---
+
+## 3. Halloween — wideo z grafiki (image to video)
+
+**Gdzie:** Gemini → Veo, opcja „wideo z obrazu”. Jako obraz startowy wgrywasz gotową grafikę Halloween (figurki, lampion, białe i zielone pestki).
+**Długość:** 8 s z generatora + 3 s planszy końcowej w CapCut (ta sama co w filmie z gadającą pestką).
+**Format:** grafika jest kwadratowa. Jeśli generator każe wybrać 9:16 albo 16:9, weź 9:16 i sprawdź, co dorysował nad i pod sceną. Jeśli coś dziwnego — zostań przy kwadracie, w feedzie też działa.
+**Termin:** reklama Halloween chodzi tylko do 31.10, a Meta potrzebuje czasu na recenzję. Wideo najlepiej mieć w ciągu 1–2 dni.
+
+### Wariant A — bez mowy (polecany)
+
+```
+Animate this miniature tilt-shift diorama. Keep the exact scene, characters, lighting, colors and composition from the image. Camera stays almost still with a slow, gentle push-in toward the center.
+
+0–3 s: the candle inside the carved jack-o'-lantern flickers and warm light pulses over the pile of WHITE shelled pumpkin seeds. The farmer figurine on the left firmly shakes his head and waves his raised hand in a clear "no, thank you" gesture. The farmer with the clipboard looks at the white seeds, frowns and crosses something off his list.
+
+3–5 s: the carved grin of the jack-o'-lantern slowly droops into a disappointed, sulking face as the farmers turn away from its seeds.
+
+5–8 s: the two farmers on the right energetically shovel DARK OLIVE-GREEN hull-less pumpkin seeds onto the overflowing trailer, a few green seeds tumble off the top, and the bearded farmer gives a big thumbs up toward the camera.
+
+Style: realistic miniature photography, shallow depth of field, warm autumn light, playful and charming, smooth natural motion.
+The white seeds always stay white with shells, the green seeds always stay dark green without shells. Do not mix them.
+Audio: soft crackle of the candle, a short playful plucked-string music sting, the scrape of shovels and seeds pouring into the trailer. No speech.
+No text, no subtitles, no logos, no watermarks.
+```
+
+### Wariant B — rolnik mówi po polsku
+
+Prompt jak w A, tylko zamień linię `Audio:` na:
+
+```
+Audio: at 0–3 s the farmer on the left says in Polish, in a cheerful adult male voice, with clear lip sync: "Z lampionu? Nie, dziękujemy!" At 5–8 s the bearded farmer on the right shouts happily in Polish: "Zielone bierzemy – w tonach!" Background: soft candle crackle and the scrape of shovels. No music.
+```
+
+### Wariant C — obrażony lampion
+
+Prompt jak w A, tylko zamień fragment `3–5 s` i linię `Audio:` na:
+
+```
+3–5 s: the jack-o'-lantern comes alive: its carved eyes and mouth move like a face and it speaks in Polish, in a deep, offended, comic voice: "Hej! A moje pestki?!" The farmers ignore it and walk past.
+
+Audio: the jack-o'-lantern's single Polish line, soft candle crackle, the scrape of shovels, a short comic music sting at the end.
+```
+
+### Poprawki (wklejaj w tę samą rozmowę)
+- `Keep the jack-o'-lantern's carved face stable, only the candle light flickers.` — jeśli lampion się deformuje (wtedy z wariantu A wypada fragment 3–5 s)
+- `Keep all figurines' hands and faces stable and realistic, minimal limb distortion.`
+- `The seeds on the left must stay white with visible shells; the seeds on the trailer must stay dark green.`
+- `Slower motion, fewer moving elements, keep the scene calm.`
+
+### Plansza końcowa (3 s, CapCut)
+Góra: **Pestki z lampionu? Nie.** / mniejszym: **Zielone z pola? Bierzemy w tonach.**
+Środek: logo Skup Pestki Dyni. Dół: **Marcin 796 866 639** + pestkadyni.pl
+
+### Przed publikacją — sprawdź
+- [ ] Brak znaku wodnego Veo/Gemini
+- [ ] Białe pestki zostały białe, zielone zielone (AI lubi to mieszać — a to jest sedno żartu)
+- [ ] Dłonie i twarze figurek bez zniekształceń
