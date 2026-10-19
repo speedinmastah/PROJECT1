@@ -3,7 +3,7 @@
 
 v1  obrotowa łódź (kolejność i czasy klatek z oryginalnego GIF-a) + duży animowany tytuł
 v2  scenariusz A (../scenariusz-reel.md) na pojedynczych zdjęciach
-v3  to samo co v2, ale łódź na wodzie w fiordzie o świcie (tło ../tla/)
+v3  to samo co v2, ale łódź na wodzie, tło to klip wideo z górskim jeziorem (../tla/)
 
 Użycie:
   python3 render_reel.py v1 --assets ../zdjecia --out v1.mp4
@@ -485,12 +485,13 @@ def render_v2(assets, emit):
 # linia wody (ułamek wysokości wycinka łodzi) i kadr tła dla każdego ujęcia v2:
 # zoom tła start/koniec, przesunięcie x, lustro (ujęcie od rufy = patrzymy w drugą stronę fiordu)
 V3_SHOTS = {
-    'obrot-09.png': dict(water=0.78, bg=((1.00, 1.04), 0, False)),
-    'obrot-00.png': dict(water=0.78, bg=((1.07, 1.10), 40, False)),
-    'obrot-05.png': dict(water=0.86, bg=((1.07, 1.10), -40, True)),
-    'obrot-02.png': dict(water=0.80, bg=((1.03, 1.06), 20, False)),
-    'obrot-01.png': dict(water=0.74, bg=((1.06, 1.00), 0, False)),
+    'obrot-09.png': dict(water=0.78, bg=((1.00, 1.04), 0, False), clip=(12.0, 1150)),
+    'obrot-00.png': dict(water=0.78, bg=((1.07, 1.10), 40, False), clip=(4.0, 960)),
+    'obrot-05.png': dict(water=0.86, bg=((1.07, 1.10), -40, True), clip=(8.0, 900)),
+    'obrot-02.png': dict(water=0.80, bg=((1.03, 1.06), 20, False), clip=(16.0, 1200)),
+    'obrot-01.png': dict(water=0.74, bg=((1.06, 1.00), 0, False), clip=(0.3, 1000)),
 }
+CLIP_SPEED = 0.8  # klip 24 kl/s odtwarzany w 0,8x daje dokładnie 30 kl/s bez dublowania klatek
 HORIZON_PAD = 1.12  # zapas na zoom i przesunięcia tła
 
 
@@ -515,6 +516,55 @@ def plate_view(plate, zoom, dx, mirror, light):
     if light < 0.999:
         view = Image.fromarray((np.asarray(view).astype(np.float32) * light).astype(np.uint8))
     return view.convert('RGBA')
+
+
+def build_bg_video(clip, out):
+    """Tło v3 z klipu: każde ujęcie dostaje własny fragment klipu, kadr 9:16, w ujęciu od rufy lustro."""
+    parts, labels = [], []
+    for i, sh in enumerate(SHOTS_V2):
+        start, cx = V3_SHOTS[sh['file']]['clip']
+        mirror = V3_SHOTS[sh['file']]['bg'][2]
+        n_frames = int(np.ceil(min(sh['t1'], DUR) * FPS - 1e-9)) - int(np.ceil(sh['t0'] * FPS - 1e-9))
+        x = int(min(max(cx - 304, 0), 1920 - 608))
+        parts.append(f"[0:v]trim=start={start},setpts=(PTS-STARTPTS)/{CLIP_SPEED},fps={FPS},trim=end_frame={n_frames},"
+                     f"setpts=PTS-STARTPTS,crop=608:1080:{x}:0,scale={W}:{H}:flags=lanczos{',hflip' if mirror else ''}[s{i}]")
+        labels.append(f'[s{i}]')
+    graph = ';'.join(parts) + ';' + ''.join(labels) + f'concat=n={len(parts)}:v=1:a=0[v]'
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', clip, '-filter_complex', graph, '-map', '[v]',
+                    '-c:v', 'libx264', '-crf', '12', '-preset', 'fast', '-pix_fmt', 'yuv420p', out], check=True)
+
+
+class FrameReader:
+    """Sekwencyjny odczyt klatek tła (rgb24) z pliku wideo."""
+
+    def __init__(self, path):
+        self.p = subprocess.Popen(['ffmpeg', '-loglevel', 'error', '-i', path, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
+                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        self.n, self.last = -1, None
+
+    def get(self, n):
+        while self.n < n:
+            buf = self.p.stdout.read(W * H * 3)
+            if len(buf) < W * H * 3:
+                break
+            self.last, self.n = np.frombuffer(buf, np.uint8).reshape(H, W, 3), self.n + 1
+        return self.last
+
+
+def grade_video_frame(rgb, zoom, light):
+    """Kolor tła z klipu: chłodniej, ciemniej, przyciemniona góra pod napisy, lekkie rozmycie (głębia ostrości)."""
+    im = Image.fromarray(rgb)
+    if zoom > 1.0005:
+        w, h = W / zoom, H / zoom
+        im = im.resize((W, H), Image.BILINEAR, box=((W - w) / 2, (H - h) / 2, (W + w) / 2, (H + h) / 2))
+    arr = np.asarray(im.filter(ImageFilter.GaussianBlur(1.6))).astype(np.float32)
+    lum = arr.mean(-1, keepdims=True)
+    arr = lum + (arr - lum) * 0.85
+    arr = (arr - 128) * 1.08 + 128
+    arr *= np.array([0.92, 0.97, 1.04], np.float32)
+    y = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
+    arr *= np.interp(y, [0, 0.38, 0.55, 1], [0.5, 0.72, 0.92, 0.8]) * light
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert('RGBA')
 
 
 def make_mist(seed=3):
@@ -564,12 +614,18 @@ def grade_boat(im, tint=(105, 100, 118), amount=0.16):
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
 
 
-def render_v3(assets, emit, bg_path):
+def render_v3(assets, emit, bg_path, work_dir):
     cuts = {sh['file']: load_cutout(os.path.join(assets, sh['file'])) for sh in SHOTS_V2}
-    plate = prepare_plate(bg_path)
+    video_bg = bg_path.lower().endswith(('.mp4', '.mov'))
+    if video_bg:
+        bg_file = os.path.join(work_dir, 'v3_tlo_9x16.mp4')
+        build_bg_video(bg_path, bg_file)
+        reader = FrameReader(bg_file)
+    else:
+        plate = prepare_plate(bg_path)
     mist = make_mist()
     title = Title(block_w=880, top=300, shadow=True)
-    words = [Words(['Poranek.', 'Jezioro.', 'Ty.'], [CUTS[0] + k * BEAT / 2 for k in range(3)], CUTS[2] - 0.17,
+    words = [Words(['Brema.', 'Jezioro.', 'Ty.'], [CUTS[0] + k * BEAT / 2 for k in range(3)], CUTS[2] - 0.17,
                    shadow=True),
              Words(['Na kolejny', 'sezon.'], [CUTS[2] + k * BEAT / 2 for k in range(2)], 8.5 - 0.17, shadow=True)]
 
@@ -587,7 +643,11 @@ def render_v3(assets, emit, bg_path):
         (z0, z1), dx, mirror = extra['bg']
         a, z = (max(shot['t0'], 0.8), shot['t1'])
         light = 0.12 + 0.88 * ease_in_out(prog(t, 0.7, 1.9))
-        fr = plate_view(plate, z0 + (z1 - z0) * prog(t, a, z), dx, mirror, light)
+        zoom = z0 + (z1 - z0) * prog(t, a, z)
+        if video_bg:
+            fr = grade_video_frame(reader.get(n), zoom, light)
+        else:
+            fr = plate_view(plate, zoom, dx, mirror, light)
 
         sc, x, y = shot_geometry(shot, cut, t)
         e = ease_in_out(prog(t, *shot['reveal'])) if 'reveal' in shot else 1.0
@@ -604,7 +664,7 @@ def render_v3(assets, emit, bg_path):
             paste(fr, refl, x, water_y)
             paste(fr, vis, x, y + bob)
             paste(fr, with_opacity(foam, e), x, water_y - 7)
-            paste(fr, with_opacity(mist, 0.55 * light), -260 + 18 * t, water_y - 150)
+            paste(fr, with_opacity(mist, (0.3 if video_bg else 0.55) * light), -260 + 18 * t, water_y - 150)
         if t < 1.5:
             g = ease_in_out(prog(t, 0.05, 0.7))
             if g > 0:
@@ -617,6 +677,8 @@ def render_v3(assets, emit, bg_path):
             wd.render(fr, t)
         title.render(fr, t, 'punch', t0=8.5, hit=8.5)
         emit(fr, t)
+    if video_bg:
+        reader.p.kill()
 
 
 # ---------------------------------------------------------------- wyjście
@@ -624,7 +686,9 @@ def render_v3(assets, emit, bg_path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('version', choices=['v1', 'v2', 'v3'])
-    ap.add_argument('--bg', default='../tla/fiord-swit.jpg', help='tło krajobrazu dla v3')
+    ap.add_argument('--bg', default='../tla/coverr-lake-in-queenstown-new-zealand-7432.mp4',
+                    help='tło v3: klip wideo (.mp4) albo zdjęcie')
+    ap.add_argument('--work-dir', default='.', help='katalog na pliki pośrednie')
     ap.add_argument('--assets', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--stills', default='')
@@ -654,7 +718,7 @@ def main():
         state['n'] += 1
 
     if args.version == 'v3':
-        render_v3(args.assets, emit, args.bg)
+        render_v3(args.assets, emit, args.bg, args.work_dir)
     else:
         (render_v1 if args.version == 'v1' else render_v2)(args.assets, emit)
     if ff:
