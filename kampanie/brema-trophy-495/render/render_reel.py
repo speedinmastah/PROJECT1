@@ -552,18 +552,19 @@ class FrameReader:
 
 
 def grade_video_frame(rgb, zoom, light):
-    """Kolor tła z klipu: chłodniej, ciemniej, przyciemniona góra pod napisy, lekkie rozmycie (głębia ostrości)."""
+    """Kolor tła z klipu: chłodniej, przyciemniona góra pod napisy, rozmycie, czarna nakładka (Ciemniej, 50%)."""
     im = Image.fromarray(rgb)
     if zoom > 1.0005:
         w, h = W / zoom, H / zoom
         im = im.resize((W, H), Image.BILINEAR, box=((W - w) / 2, (H - h) / 2, (W + w) / 2, (H + h) / 2))
-    arr = np.asarray(im.filter(ImageFilter.GaussianBlur(1.6))).astype(np.float32)
+    arr = np.asarray(im.filter(ImageFilter.GaussianBlur(3.2))).astype(np.float32)
     lum = arr.mean(-1, keepdims=True)
     arr = lum + (arr - lum) * 0.85
     arr = (arr - 128) * 1.08 + 128
     arr *= np.array([0.92, 0.97, 1.04], np.float32)
     y = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
     arr *= np.interp(y, [0, 0.38, 0.55, 1], [0.5, 0.72, 0.92, 0.8]) * light
+    arr *= 0.5  # czarna nakładka w trybie Ciemniej, krycie 50%: min(tło, 0) zmieszane pół na pół = tło x 0,5
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert('RGBA')
 
 
@@ -577,7 +578,7 @@ def render_v3(assets, emit, bg_path, work_dir):
     else:
         plate = prepare_plate(bg_path)
     title = Title(block_w=880, top=300, shadow=True)
-    words = [Words(['Brema.', 'Jezioro.', 'Ty.'], [CUTS[0] + k * BEAT / 2 for k in range(3)], CUTS[2] - 0.17,
+    words = [Words(['JEZIORO,', 'TY I TWOJA', 'BREMA'], [CUTS[0] + k * BEAT / 2 for k in range(3)], CUTS[2] - 0.17,
                    shadow=True),
              Words(['Na kolejny', 'sezon.'], [CUTS[2] + k * BEAT / 2 for k in range(2)], 8.5 - 0.17, shadow=True)]
 
