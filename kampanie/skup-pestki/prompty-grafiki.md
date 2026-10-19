@@ -109,7 +109,8 @@ Animate this miniature tilt-shift diorama. Keep the exact scene, characters, lig
 
 3–5 s: the carved grin of the jack-o'-lantern slowly droops into a disappointed, sulking face as the farmers turn away from its seeds.
 
-5–8 s: the two farmers on the right energetically shovel DARK OLIVE-GREEN hull-less pumpkin seeds onto the overflowing trailer, a few green seeds tumble off the top, and the bearded farmer gives a big thumbs up toward the camera.
+5–8 s: LOADING the trailer: the two farmers on the right scoop DARK OLIVE-GREEN hull-less pumpkin seeds with their shovels from the pile lying on the table in front of the trailer and toss them UP INTO the trailer bed. Every shovel moves from the ground pile upward into the trailer. The pile on the ground gets smaller and the heap on the trailer grows taller. The bearded farmer then gives a big thumbs up toward the camera.
+Nobody unloads the trailer: no seeds are taken out of the trailer and no seeds slide or fall off it.
 
 Style: realistic miniature photography, shallow depth of field, warm autumn light, playful and charming, smooth natural motion.
 The white seeds always stay white with shells, the green seeds always stay dark green without shells. Do not mix them.
