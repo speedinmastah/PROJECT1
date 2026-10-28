@@ -1,11 +1,28 @@
-# Skup Pestki Dyni — kampanie Meta, październik 2026
-
-**Stan na 19.10.2026:** wszystko zbudowane w koncie reklamowym i **wstrzymane**. Nic nie wydaje pieniędzy, dopóki Michał nie włączy.
+**Stan na 28.10.2026:** kampanie **uruchomione** (decyzja Michała). Wyjątek: reklama „Obsługa 2 — suszenie i czyszczenie” wstrzymana do potwierdzenia wolnych terminów suszarni.
 **Konto:** Skup Pestek DYni (`act_1407352321467568`), portfolio „Skup Pestki Dyni”, waluta PLN, karta VISA *6280.
 **Strona FB:** Skup pestek dyni (`111671224611129`). **Piksel:** Pixel SPD (`2267405260767459`), przypisany do konta.
 **DSA (beneficjent i płatnik):** TRAWKA Trębicki Marcin.
 
 Dane z poprzednich kampanii (koszty, wydatki) są w prywatnym raporcie, nie tutaj — to repo jest publiczne.
+
+## 0. Harmonogram
+
+| Kampania | Start | Koniec | Dziennie | Uwagi |
+|---|---|---|---|---|
+| 2 Skup pestki | 28.10.2026 | bez końca | 60 zł | 3 reklamy |
+| 4 Śmieszna – gadająca pestka | 28.10.2026 | **6.11.2026** (automatycznie) | 30 zł | test 10 dni, max ok. 300 zł |
+| 3 Obsługa gospodarstw | 28.10.2026 | bez końca | 30 zł | karuzela + kontraktacja; suszenie wstrzymane |
+| 1 Nasiona 2027 | **1.12.2026** (automatycznie) | decyzja ok. 15.03.2027 | 80 zł | włączona, czeka na datę startu |
+
+| Data | Co |
+|---|---|
+| 29.10 | sprawdzenie, czy reklamy się wyświetlają (wydatki, odrzucenia) |
+| 4.11 | raport po 7 dniach: telefony i koszt telefonu per kampania, FB vs IG |
+| 6.11 | koniec testu Śmieszna → decyzja: przedłużyć czy wyłączyć |
+| 1.12 | start nasion |
+| ok. 15.03.2027 | ścięcie lub wyłączenie nasion (w poprzednim sezonie od marca koszt telefonu rósł 2–3×) |
+
+Koszt wg kalendarza: 28–31.10 ok. 480 zł · listopad ok. 2 880 zł · grudzień ok. 5 270 zł (z nasionami) · razem do końca grudnia ok. 8 630 zł.
 
 ---
 
