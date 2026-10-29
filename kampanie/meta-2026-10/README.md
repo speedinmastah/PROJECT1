@@ -1,5 +1,5 @@
 **Stan na 28.10.2026:** kampanie **uruchomione** (decyzja Michała). Wyjątek: reklama „Obsługa 2 — suszenie i czyszczenie” wstrzymana do potwierdzenia wolnych terminów suszarni.
-**Konto:** Skup Pestek DYni (`act_1407352321467568`), portfolio „Skup Pestki Dyni”, waluta PLN, karta VISA *6280.
+**Konto:** Skup Pestek DYni (`act_1407352321467568`), portfolio „Skup Pestki Dyni”, waluta PLN.
 **Strona FB:** Skup pestek dyni (`111671224611129`). **Piksel:** Pixel SPD (`2267405260767459`), przypisany do konta.
 **DSA (beneficjent i płatnik):** TRAWKA Trębicki Marcin.
 
