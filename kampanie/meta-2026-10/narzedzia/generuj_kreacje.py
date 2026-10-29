@@ -137,13 +137,13 @@ d = ImageDraw.Draw(im)
 y = text_block(d, (64, 70), "Skupujemy pestkę dyni.\nKażdą ilość.", font("xb", 76), WHITE, 950, 1.08)
 y = text_block(d, (64, y + 18), "Warunki znasz, zanim ruszysz z podwórka:", font("sb", 40), SAGE, 950) + 30
 check_list(d, (64, y), [
-    "0% potrąceń za wilgotność do 8%",
-    "Płatność przed załadunkiem – gotówka lub przelew",
+    "Potrącenia 2–3% w zależności od suszarni",
+    "Ważymy, potrącamy, płacimy – przed załadunkiem",
     "Odbiór własnym transportem z całej Polski",
     "Bez minimum – od worka po przyczepę",
 ], font("b", 46), 950)
 footer(im)
-save(im, "skup-1-warunki.jpg")
+save(im, "skup-1-warunki-v2.jpg")
 
 # S2 — przykład rozliczenia
 im = Image.new("RGB", (1080, 1350), SEED)

@@ -52,7 +52,7 @@ Podglądy otwierają się na telefonie / w przeglądarce zalogowanej do FB.
 
 | Kampania | Reklama | Plik kreacji | Podgląd |
 |---|---|---|---|
-| Skup | Skup 1 — warunki | `kreacje/skup-1-warunki.jpg` | https://fb.me/2aqvlsfTbdYjwPf |
+| Skup | Skup 1 — warunki | `kreacje/skup-1-warunki-v2.jpg` | https://fb.me/2aqvlsfTbdYjwPf |
 | Skup | Skup 2 — przykład rozliczenia | `kreacje/skup-2-rozliczenie.jpg` | https://fb.me/1XbkE8Zsv2nLssV |
 | Skup | Skup 3 — odbiór transportem | `kreacje/skup-3-transport.jpg` | https://fb.me/27SyjKGzQzCTlhO |
 | Nasiona | Nasiona 1 — karuzela 7 odmian | `kreacje/nasiona-karuzela-0…8.jpg` | https://fb.me/2aIMjeVYyLH50KW |
@@ -76,13 +76,12 @@ Wszystkie fakty z tekstów są ze strony pestkadyni.pl (warunki skupu, FAQ, usł
 
 ### Kampania 2 — Skup pestki
 
-**Skup 1 — warunki** · nagłówek: *Skup pestki dyni – każda ilość* · opis: *Płatność przed załadunkiem*
+**Skup 1 — warunki** (tekst poprawiony 29.10 wg Michała) · nagłówek: *Skup pestki dyni – każda ilość* · opis: *Płatność przed załadunkiem*
 > Skupujemy pestkę dyni bezłupinowej – każdą ilość, od worka po pełną przyczepę.
 >
-> ✅ Za wilgotność do 8% nie potrącamy nic
-> ✅ Płacimy przed załadunkiem – gotówką albo przelewem
+> ✅ Potrącenia 2–3% w zależności od suszarni
+> ✅ Ważymy, potrącamy, płacimy – przed załadunkiem, gotówką albo przelewem
 > ✅ Odbieramy własnym transportem z całej Polski
-> ✅ Ważymy przy Tobie, rozładunek po naszej stronie
 >
 > Zadzwoń, powiedz, ile masz i czy towar jest czyszczony – cenę ustalimy przez telefon.
 > 📞 Marcin: 796 866 639 (pn–sob, 8–16)
